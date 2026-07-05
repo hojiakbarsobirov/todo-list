@@ -51,7 +51,12 @@ const PricesPage = () => {
   // Yangi zapchast qo'shish yoki tahrirlash funksiyasi
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.costPrice || !formData.salePrice) return;
+    
+    // Narxlar 0 bo'lsa ham muammosiz o'tishi uchun bo'sh stringga tekshiramiz
+    if (!formData.name || formData.costPrice === "" || formData.salePrice === "") {
+      alert("Iltimos, majburiy maydonlarni to'ldiring!");
+      return;
+    }
 
     const partData = {
       name: formData.name,
@@ -65,7 +70,7 @@ const PricesPage = () => {
 
     try {
       if (isEditMode && editingId) {
-        // Hujjatni yangilash (Edit)
+        // Hujjatni yangilash (Edit) - Bu yerda createdAt yangilanmaydi, aslicha qoladi
         await updateDoc(doc(db, "spare_parts", editingId), partData);
       } else {
         // Yangi hujjat qo'shish (Add)
@@ -79,6 +84,7 @@ const PricesPage = () => {
       closeModal();
     } catch (error) {
       console.error("Ma'lumotni saqlashda xatolik:", error);
+      alert("Xatolik yuz berdi: " + error.message);
     }
   };
 
@@ -89,10 +95,10 @@ const PricesPage = () => {
     setFormData({
       name: part.name,
       code: part.code === "N/A" ? "" : part.code,
-      costPrice: part.costPrice,
-      salePrice: part.salePrice,
+      costPrice: part.costPrice !== undefined ? part.costPrice : "",
+      salePrice: part.salePrice !== undefined ? part.salePrice : "",
       installationPrice: part.installationPrice || "",
-      stock: part.stock,
+      stock: part.stock !== undefined ? part.stock : "",
       carModel: part.carModel === "Umumiy" ? "" : part.carModel,
     });
     setIsModalOpen(true);
@@ -129,9 +135,9 @@ const PricesPage = () => {
 
   // Qidiruv tizimi
   const filteredParts = parts.filter((part) =>
-    part.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    part.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    part.carModel.toLowerCase().includes(searchTerm.toLowerCase())
+    (part.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+    (part.code?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+    (part.carModel?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
   return (
