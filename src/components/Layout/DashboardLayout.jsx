@@ -32,24 +32,23 @@ const DashboardLayout = () => {
           ${sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:w-20 lg:translate-x-0'}`}
       >
         <div>
-          {/* Logo Qismi */}
-          <div className="h-16 flex items-center justify-between px-5 bg-white border-b border-slate-100">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/10 flex-shrink-0 font-bold">
-                💡
-              </div>
-              {sidebarOpen && (
-                <span className="font-bold text-base tracking-wide text-slate-900 whitespace-nowrap animate-in fade-in duration-300">
-                  System Panel
-                </span>
-              )}
-            </div>
-
+          {/* Sarlavha va tugma joylashgan qism */}
+          <div className={`h-16 flex items-center bg-white border-b border-slate-100 ${sidebarOpen ? 'justify-between px-5' : 'justify-center px-0'}`}>
+            
+            {/* Matn faqat sidebar ochiq bo'lganda ko'rinadi va sekin paydo bo'lish effektiga ega */}
+            {sidebarOpen && (
+              <span className="font-bold text-base tracking-wide text-slate-900 whitespace-nowrap animate-in fade-in duration-300">
+                System Panel
+              </span>
+            )}
+            
             <button 
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 cursor-pointer"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-xl text-slate-500 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+              title={sidebarOpen ? "Menyuni yopish" : "Menyuni ochish"}
             >
-              <X size={18} />
+              {sidebarOpen ? <X size={18} className="lg:hidden" /> : null}
+              <Menu size={18} className={sidebarOpen ? "hidden lg:block" : "block"} />
             </button>
           </div>
 
@@ -115,21 +114,14 @@ const DashboardLayout = () => {
         />
       )}
 
-      {/* ASOSIY KONTENT USTUNI (Layout tuzatilgan qismi) */}
+      {/* ASOSIY KONTENT USTUNI */}
       <div 
         className={`flex-1 flex flex-col min-w-0 w-full max-w-full transition-all duration-300 ease-in-out
           ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}
       >
-        {/* Navbar */}
+        {/* Navbar (Header) */}
         <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10 w-full">
           <div className="flex items-center gap-3.5">
-            <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 -ml-2 rounded-xl text-slate-500 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
-            >
-              <Menu size={20} />
-            </button>
-            
             <div className="flex items-center text-xs font-medium text-slate-400 tracking-wide select-none">
               <span>Boshqaruv</span>
               <span className="mx-2 text-slate-300">/</span>
