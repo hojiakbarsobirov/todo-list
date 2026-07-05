@@ -6,28 +6,31 @@ import {
   query,
   orderBy,
   addDoc,
+  updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
 } from "firebase/firestore";
-import { Trash2, Plus, Search, Package, Car, Wrench, AlertTriangle } from "lucide-react";
+import { Trash2, Edit3, Plus, Search, Package, Car, Wrench, AlertTriangle } from "lucide-react";
 
 const PricesPage = () => {
   // State-lar
   const [parts, setParts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [partToDelete, setPartToDelete] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
 
-  // Yangi zapchast formasi uchun state (Kelish, Sotish va O'rnatish narxlari bilan)
+  // Form state (Kelish, Sotish va O'rnatish narxlari bilan)
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    costPrice: "",         // Kelish narxi
-    salePrice: "",         // Sotish narxi
-    installationPrice: "", // O'rnatish narxi
+    costPrice: "",
+    salePrice: "",
+    installationPrice: "",
     stock: "",
     carModel: "",
   });
@@ -45,29 +48,62 @@ const PricesPage = () => {
     return () => unsubscribe();
   }, []);
 
-  // Yangi zapchast qo'shish funksiyasi
+  // Yangi zapchast qo'shish yoki tahrirlash funksiyasi
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.costPrice || !formData.salePrice) return;
 
+    const partData = {
+      name: formData.name,
+      code: formData.code || "N/A",
+      costPrice: Number(formData.costPrice),
+      salePrice: Number(formData.salePrice),
+      installationPrice: Number(formData.installationPrice) || 0,
+      stock: Number(formData.stock) || 0,
+      carModel: formData.carModel || "Umumiy",
+    };
+
     try {
-      await addDoc(collection(db, "spare_parts"), {
-        name: formData.name,
-        code: formData.code || "N/A",
-        costPrice: Number(formData.costPrice),
-        salePrice: Number(formData.salePrice),
-        installationPrice: Number(formData.installationPrice) || 0, // Agar kiritilmasa 0 saqlanadi
-        stock: Number(formData.stock) || 0,
-        carModel: formData.carModel || "Umumiy",
-        createdAt: serverTimestamp(),
-      });
+      if (isEditMode && editingId) {
+        // Hujjatni yangilash (Edit)
+        await updateDoc(doc(db, "spare_parts", editingId), partData);
+      } else {
+        // Yangi hujjat qo'shish (Add)
+        await addDoc(collection(db, "spare_parts"), {
+          ...partData,
+          createdAt: serverTimestamp(),
+        });
+      }
 
       // Formani tozalash va modalni yopish
-      setFormData({ name: "", code: "", costPrice: "", salePrice: "", installationPrice: "", stock: "", carModel: "" });
-      setIsModalOpen(false);
+      closeModal();
     } catch (error) {
-      console.error("Zapchast qo'shishda xatolik:", error);
+      console.error("Ma'lumotni saqlashda xatolik:", error);
     }
+  };
+
+  // Tahrirlash modalini ochish
+  const openEditModal = (part) => {
+    setIsEditMode(true);
+    setEditingId(part.id);
+    setFormData({
+      name: part.name,
+      code: part.code === "N/A" ? "" : part.code,
+      costPrice: part.costPrice,
+      salePrice: part.salePrice,
+      installationPrice: part.installationPrice || "",
+      stock: part.stock,
+      carModel: part.carModel === "Umumiy" ? "" : part.carModel,
+    });
+    setIsModalOpen(true);
+  };
+
+  // Modalni yopish va tozalash
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsEditMode(false);
+    setEditingId(null);
+    setFormData({ name: "", code: "", costPrice: "", salePrice: "", installationPrice: "", stock: "", carModel: "" });
   };
 
   // O'chirishni boshlash
@@ -133,7 +169,7 @@ const PricesPage = () => {
             </div>
 
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => { setIsEditMode(false); setIsModalOpen(true); }}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-md shadow-blue-600/10 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
             >
               <Plus size={14} /> Zapchast Qo'shish
@@ -152,7 +188,7 @@ const PricesPage = () => {
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto w-full max-w-full">
-            <table className="w-full text-left border-collapse table-fixed min-w-[1080px]">
+            <table className="w-full text-left border-collapse table-fixed min-w-[1120px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider select-none">
                   <th className="w-[45px] border-r border-slate-200 p-2 text-center bg-slate-100/70">#</th>
@@ -163,7 +199,7 @@ const PricesPage = () => {
                   <th className="w-[130px] border-r border-slate-200 p-2 px-3 text-blue-600 text-right pr-4">Sotish Narxi</th>
                   <th className="w-[130px] border-r border-slate-200 p-2 px-3 text-amber-600 text-right pr-4">O'rnatish</th>
                   <th className="w-[85px] border-r border-slate-200 p-2 text-center text-slate-600">Soni</th>
-                  <th className="w-[60px] p-2 text-center text-slate-600">Amal</th>
+                  <th className="w-[80px] p-2 text-center text-slate-600">Amal</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 font-mono text-xs text-slate-700">
@@ -197,7 +233,14 @@ const PricesPage = () => {
                         {part.stock} ta
                       </span>
                     </td>
-                    <td className="p-1 text-center">
+                    <td className="p-1 text-center font-sans flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => openEditModal(part)}
+                        className="text-slate-400 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition-colors cursor-pointer"
+                        title="Tahrirlash"
+                      >
+                        <Edit3 size={14} />
+                      </button>
                       <button
                         onClick={() => openDeleteModal(part)}
                         className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition-colors cursor-pointer"
@@ -214,15 +257,17 @@ const PricesPage = () => {
         )}
       </div>
 
-      {/* YANGI ZAPCHAST QO'SHISH MODALI */}
+      {/* QO'SHISH VA TAHRIRLASH MODALI */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] flex justify-center items-center z-50 px-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 p-6 animate-in zoom-in-95 duration-200">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                <Plus size={16} />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isEditMode ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+                {isEditMode ? <Edit3 size={16} /> : <Plus size={16} />}
               </div>
-              <h3 className="text-sm font-bold text-slate-900 font-sans">Yangi Ehtiyot Qismi Qo'shish</h3>
+              <h3 className="text-sm font-bold text-slate-900 font-sans">
+                {isEditMode ? "Ehtiyot Qismini Tahrirlash" : "Yangi Ehtiyot Qismi Qo'shish"}
+              </h3>
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4 font-sans text-xs">
@@ -312,16 +357,16 @@ const PricesPage = () => {
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-all font-semibold cursor-pointer"
                 >
                   Bekor qilish
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold shadow-md shadow-blue-600/10 transition-all cursor-pointer"
+                  className={`px-4 py-2 rounded-xl text-white font-semibold shadow-md transition-all cursor-pointer ${isEditMode ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/10' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/10'}`}
                 >
-                  Saqlash
+                  {isEditMode ? "Yangilash" : "Saqlash"}
                 </button>
               </div>
             </form>
