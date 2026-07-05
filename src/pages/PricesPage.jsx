@@ -10,7 +10,7 @@ import {
   doc,
   serverTimestamp,
 } from "firebase/firestore";
-import { Trash2, Plus, Search, Package, Car, Wrench, AlertTriangle, TrendingUp, DollarSign } from "lucide-react";
+import { Trash2, Plus, Search, Package, Car, Wrench, AlertTriangle } from "lucide-react";
 
 const PricesPage = () => {
   // State-lar
@@ -21,12 +21,13 @@ const PricesPage = () => {
   const [partToDelete, setPartToDelete] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
 
-  // Yangi zapchast formasi uchun state (Kelish va Sotish narxlari bilan)
+  // Yangi zapchast formasi uchun state (Kelish, Sotish va O'rnatish narxlari bilan)
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    costPrice: "", // Kelish narxi
-    salePrice: "", // Sotish narxi
+    costPrice: "",         // Kelish narxi
+    salePrice: "",         // Sotish narxi
+    installationPrice: "", // O'rnatish narxi
     stock: "",
     carModel: "",
   });
@@ -55,13 +56,14 @@ const PricesPage = () => {
         code: formData.code || "N/A",
         costPrice: Number(formData.costPrice),
         salePrice: Number(formData.salePrice),
+        installationPrice: Number(formData.installationPrice) || 0, // Agar kiritilmasa 0 saqlanadi
         stock: Number(formData.stock) || 0,
         carModel: formData.carModel || "Umumiy",
         createdAt: serverTimestamp(),
       });
 
       // Formani tozalash va modalni yopish
-      setFormData({ name: "", code: "", costPrice: "", salePrice: "", stock: "", carModel: "" });
+      setFormData({ name: "", code: "", costPrice: "", salePrice: "", installationPrice: "", stock: "", carModel: "" });
       setIsModalOpen(false);
     } catch (error) {
       console.error("Zapchast qo'shishda xatolik:", error);
@@ -113,7 +115,7 @@ const PricesPage = () => {
                   UZS • Ombor Nazorati
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">Ehtiyot qismlarning kelish, sotish narxlari va qoldiq hisobi</p>
+              <p className="text-xs text-slate-400 mt-0.5">Ehtiyot qismlarning kelish, sotish narxlari, o'rnatish xizmati va qoldiq hisobi</p>
             </div>
           </div>
           
@@ -150,16 +152,17 @@ const PricesPage = () => {
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto w-full max-w-full">
-            <table className="w-full text-left border-collapse table-fixed min-w-[950px]">
+            <table className="w-full text-left border-collapse table-fixed min-w-[1080px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider select-none">
                   <th className="w-[45px] border-r border-slate-200 p-2 text-center bg-slate-100/70">#</th>
                   <th className="w-[120px] border-r border-slate-200 p-2 px-3 text-slate-600">Artikul / Kod</th>
-                  <th className="w-[22%] border-r border-slate-200 p-2 px-3 text-slate-800 font-extrabold">Ehtiyot Qismi Nomi</th>
-                  <th className="w-[15%] border-r border-slate-200 p-2 px-3 text-slate-600">Avtomobil Rusumi</th>
-                  <th className="w-[140px] border-r border-slate-200 p-2 px-3 text-slate-600 text-right pr-4">Kelish Narxi</th>
-                  <th className="w-[140px] border-r border-slate-200 p-2 px-3 text-blue-600 text-right pr-4">Sotish Narxi</th>
-                  <th className="w-[90px] border-r border-slate-200 p-2 text-center text-slate-600">Soni</th>
+                  <th className="w-[20%] border-r border-slate-200 p-2 px-3 text-slate-800 font-extrabold">Ehtiyot Qismi Nomi</th>
+                  <th className="w-[13%] border-r border-slate-200 p-2 px-3 text-slate-600">Avtomobil Rusumi</th>
+                  <th className="w-[130px] border-r border-slate-200 p-2 px-3 text-slate-600 text-right pr-4">Kelish Narxi</th>
+                  <th className="w-[130px] border-r border-slate-200 p-2 px-3 text-blue-600 text-right pr-4">Sotish Narxi</th>
+                  <th className="w-[130px] border-r border-slate-200 p-2 px-3 text-amber-600 text-right pr-4">O'rnatish</th>
+                  <th className="w-[85px] border-r border-slate-200 p-2 text-center text-slate-600">Soni</th>
                   <th className="w-[60px] p-2 text-center text-slate-600">Amal</th>
                 </tr>
               </thead>
@@ -185,6 +188,9 @@ const PricesPage = () => {
                     </td>
                     <td className="border-r border-slate-200 p-2 px-3 text-blue-600 font-bold text-right pr-4">
                       {part.salePrice ? `${part.salePrice.toLocaleString()} so'm` : "0 so'm"}
+                    </td>
+                    <td className="border-r border-slate-200 p-2 px-3 text-amber-600 font-medium text-right pr-4 bg-amber-50/10">
+                      {part.installationPrice ? `${part.installationPrice.toLocaleString()} so'm` : "Tekin"}
                     </td>
                     <td className="border-r border-slate-200 p-2 text-center font-sans">
                       <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${part.stock > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
@@ -280,15 +286,27 @@ const PricesPage = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">Soni (Ombordagi qoldiq)</label>
-                <input
-                  type="number"
-                  placeholder="Nechta borligini kiriting"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-amber-600 font-semibold mb-1">O'rnatish Narxi (so'm)</label>
+                  <input
+                    type="number"
+                    placeholder="Xizmat haqi (ixtiyoriy)"
+                    value={formData.installationPrice}
+                    onChange={(e) => setFormData({ ...formData, installationPrice: e.target.value })}
+                    className="w-full px-3 py-2 border border-amber-200 rounded-xl focus:outline-none focus:border-amber-500 bg-amber-50/10"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 font-semibold mb-1">Soni (Ombordagi qoldiq)</label>
+                  <input
+                    type="number"
+                    placeholder="Nechta borligini kiriting"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
