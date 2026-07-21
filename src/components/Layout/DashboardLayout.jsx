@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { BookOpen, DollarSign, LogOut, Menu, ClipboardList, X } from 'lucide-react';
+import { BookOpen, DollarSign, LogOut, Menu, ClipboardList, X, FileText } from 'lucide-react'; // 1. FileText ikonkasini qo'shdik
 import { useState, useEffect } from 'react';
 
 const DashboardLayout = () => {
@@ -29,10 +29,12 @@ const DashboardLayout = () => {
     localStorage.setItem('sidebar_open', JSON.stringify(sidebarOpen));
   }, [sidebarOpen]);
 
+  // 2. Menu elementlariga Hujjatlar sahifasini qo'shdik
   const menuItems = [
     { path: '/home', name: 'Dashboard', icon: <BookOpen size={18} /> },
     { path: '/home/tasks', name: 'Vazifalar (Workbook)', icon: <ClipboardList size={18} /> },
     { path: '/home/prices', name: 'Zapchast narxlari', icon: <DollarSign size={18} /> },
+    { path: '/home/documents', name: 'Hujjatlar', icon: <FileText size={18} /> },
   ];
 
   const currentItem = menuItems.find(item => item.path === location.pathname);
@@ -131,7 +133,7 @@ const DashboardLayout = () => {
         </div>
       </aside>
 
-      {/* MOBIL OVERLAY (Z-index va ochiqlik holati to'g'rilandi) */}
+      {/* MOBIL OVERLAY */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-slate-950/40 backdrop-blur-[1px] z-30 lg:hidden transition-opacity duration-300"
@@ -139,7 +141,7 @@ const DashboardLayout = () => {
         />
       )}
 
-      {/* ASOSIY KONTENT USTUNI (Paddinglar dinamik va moslashuvchan qilindi) */}
+      {/* ASOSIY KONTENT USTUNI */}
       <div 
         className={`flex-1 flex flex-col min-w-0 w-full min-h-screen transition-all duration-300 ease-in-out
           ${sidebarOpen ? 'lg:pl-64' : 'lg:pl-20'}`}
@@ -147,7 +149,6 @@ const DashboardLayout = () => {
         {/* Navbar (Header) */}
         <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10 w-full">
           <div className="flex items-center gap-3">
-            {/* Mobil menyu tugmasi (Faqat sidebar yopiq turganda ko'rinadi) */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="p-2 -ml-2 rounded-xl text-slate-500 hover:bg-slate-50 active:scale-95 transition-all lg:hidden cursor-pointer"
@@ -163,7 +164,7 @@ const DashboardLayout = () => {
           </div>
         </header>
 
-        {/* Ishchi maydon kontenti (Kichik ekranlarda padding kamaytirildi) */}
+        {/* Ishchi maydon kontenti */}
         <main className="p-4 sm:p-6 w-full flex-grow overflow-x-hidden">
           <div className="w-full h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
             <Outlet />

@@ -5,6 +5,7 @@ import DashboardLayout from './components/Layout/DashboardLayout'
 import PricesPage from './pages/PricesPage'
 import HomePage from './pages/HomePage' // Excel uslubidagi sahifa
 import GeneralDashboard from './pages/GeneralDashboard'
+import DocumentsPage from './pages/DocumentsPage' // 1. Xujjatlar sahifasini import qilamiz
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
         
         {/* /home/prices (Zapchast narxlari) */}
         <Route path='prices' element={<PricesPage />} />
+
+        {/* /home/documents (Xujjatlar sahifasi) */}
+        <Route path='documents' element={<DocumentsPage />} /> {/* 2. Yangi marshrut */}
       </Route>
     </Routes>
   )
